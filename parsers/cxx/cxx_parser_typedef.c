@@ -334,6 +334,8 @@ skip_to_comma_or_end:
 					CXXToken * par = cxxTokenCreate();
 					par->eType = CXXTokenTypeOpeningParenthesis;
 					par->iLineNumber = t->iLineNumber;
+					par->iColumnNumber = t->iColumnNumber;
+					par->iEndColumnNumber = t->iEndColumnNumber;
 					par->oFilePosition = t->oFilePosition;
 					vStringPut(par->pszWord,'(');
 					par->pChain = NULL;
@@ -342,6 +344,8 @@ skip_to_comma_or_end:
 					par = cxxTokenCreate();
 					par->eType = CXXTokenTypeIdentifier;
 					par->iLineNumber = t->iLineNumber;
+					par->iColumnNumber = t->iColumnNumber;
+					par->iEndColumnNumber = t->iEndColumnNumber;
 					par->oFilePosition = t->oFilePosition;
 					vStringCopy(par->pszWord,t->pszWord);
 					par->pChain = NULL;
@@ -357,6 +361,8 @@ skip_to_comma_or_end:
 					par = cxxTokenCreate();
 					par->eType = CXXTokenTypeClosingParenthesis;
 					par->iLineNumber = t->iLineNumber;
+					par->iColumnNumber = t->iColumnNumber;
+					par->iEndColumnNumber = t->iEndColumnNumber;
 					par->oFilePosition = t->oFilePosition;
 					vStringPut(par->pszWord,')');
 					par->pChain = NULL;

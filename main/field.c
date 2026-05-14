@@ -67,6 +67,8 @@ static const char *renderFieldExtras (const tagEntryInfo *const tag, const char 
 static const char *renderFieldXpath (const tagEntryInfo *const tag, const char *value, vString* b);
 static const char *renderFieldScopeKindName(const tagEntryInfo *const tag, const char *value, vString* b);
 static const char *renderFieldEnd (const tagEntryInfo *const tag, const char *value, vString* b);
+static const char *renderFieldColumn (const tagEntryInfo *const tag, const char *value, vString* b);
+static const char *renderFieldEndColumn (const tagEntryInfo *const tag, const char *value, vString* b);
 static const char *renderFieldEpoch (const tagEntryInfo *const tag, const char *value, vString* b);
 static const char *renderFieldNth (const tagEntryInfo *const tag, const char *value, vString* b);
 
@@ -84,6 +86,8 @@ static bool     isSignatureFieldAvailable (const tagEntryInfo *const tag, const 
 static bool     isExtrasFieldAvailable    (const tagEntryInfo *const tag, const fieldDefinition *fdef);
 static bool     isXpathFieldAvailable     (const tagEntryInfo *const tag, const fieldDefinition *fdef);
 static bool     isEndFieldAvailable       (const tagEntryInfo *const tag, const fieldDefinition *fdef);
+static bool     isColumnFieldAvailable    (const tagEntryInfo *const tag, const fieldDefinition *fdef);
+static bool     isEndColumnFieldAvailable (const tagEntryInfo *const tag, const fieldDefinition *fdef);
 static bool     isEpochAvailable          (const tagEntryInfo *const tag, const fieldDefinition *fdef);
 static bool     isNthAvailable            (const tagEntryInfo *const tag, const fieldDefinition *fdef);
 
@@ -105,6 +109,7 @@ static EsObject* getFieldValueForSignature (const tagEntryInfo *, const fieldDef
 static EsObject* setFieldValueForSignature (tagEntryInfo *, const fieldDefinition *, const EsObject *);
 static EsObject* getFieldValueForRoles (const tagEntryInfo *, const fieldDefinition *);
 static EsObject* getFieldValueForLineCommon (const tagEntryInfo *, const fieldDefinition *);
+static EsObject* getFieldValueForColumnCommon (const tagEntryInfo *, const fieldDefinition *);
 static EsObject* checkFieldValueForLineCommon (const fieldDefinition *, const EsObject *);
 static EsObject* setFieldValueForLineCommon (tagEntryInfo *, const fieldDefinition *, const EsObject *);
 static EsObject* setFieldValueForInherits (tagEntryInfo *, const fieldDefinition *, const EsObject *);
@@ -232,6 +237,22 @@ static fieldDefinition fieldDefinitionsExuberant [] = {
 		.setterValueType    = "matchloc|line:int", /* line <= getInputLineNumber(); */
 		.checkValueForSetter= checkFieldValueForLineCommon,
 		.setValueObject     = setFieldValueForLineCommon,
+	},
+	[FIELD_COLUMN_NUMBER - FIELD_ECTAGS_START] = {
+		.letter             = 'c',
+		.name               = "column",
+		.description        = "One-based character column of tag definition",
+		.enabled            = false,
+		.render             = renderFieldColumn,
+		.renderNoEscaping   = NULL,
+		.doesContainAnyChar = NULL,
+		.isValueAvailable   = isColumnFieldAvailable,
+		.dataType           = FIELDTYPE_INTEGER,
+		.getterValueType    = "int",
+		.getValueObject     = getFieldValueForColumnCommon,
+		.setterValueType    = NULL,
+		.checkValueForSetter= NULL,
+		.setValueObject     = NULL,
 	},
 	[FIELD_SCOPE - FIELD_ECTAGS_START] = {
 		.letter				= 's',
@@ -440,6 +461,22 @@ static fieldDefinition fieldDefinitionsUniversal [] = {
 		.checkValueForSetter= checkFieldValueForLineCommon,
 		.setValueObject     = setFieldValueForLineCommon,
 
+	},
+	[FIELD_END_COLUMN - FIELDS_UCTAGS_START] = {
+		.letter				= 'Q',
+		.name				= "endColumn",
+		.description		= "One-based character column just after the tag name",
+		.enabled			= false,
+		.render				= renderFieldEndColumn,
+		.renderNoEscaping	= NULL,
+		.doesContainAnyChar = NULL,
+		.isValueAvailable	= isEndColumnFieldAvailable,
+		.dataType			= FIELDTYPE_INTEGER,
+		.getterValueType    = "int",
+		.getValueObject     = getFieldValueForColumnCommon,
+		.setterValueType    = NULL,
+		.checkValueForSetter= NULL,
+		.setValueObject     = NULL,
 	},
 	[FIELD_EPOCH - FIELDS_UCTAGS_START] = {
 		.letter				= 'T',
@@ -1139,6 +1176,31 @@ static const char *renderFieldEnd (const tagEntryInfo *const tag,
 		return NULL;
 }
 
+static const char *renderFieldColumn (const tagEntryInfo *const tag,
+									  const char *value CTAGS_ATTR_UNUSED,
+									  vString* b)
+{
+	static char buf[21];
+
+	sprintf (buf, "%lu", getTagColumn (tag));
+	return renderAsIs (b, buf);
+}
+
+static const char *renderFieldEndColumn (const tagEntryInfo *const tag,
+										 const char *value CTAGS_ATTR_UNUSED,
+										 vString* b)
+{
+	static char buf[21];
+
+	if (getTagEndLine (tag) != 0)
+	{
+		sprintf (buf, "%lu", getTagEndColumn (tag));
+		return renderAsIs (b, buf);
+	}
+	else
+		return NULL;
+}
+
 static const char *renderFieldEpoch (const tagEntryInfo *const tag,
 									  const char *value, vString* b)
 {
@@ -1217,6 +1279,16 @@ static bool isXpathFieldAvailable (const tagEntryInfo *const tag, const fieldDef
 }
 
 static bool isEndFieldAvailable (const tagEntryInfo *const tag, const fieldDefinition *fdef CTAGS_ATTR_UNUSED)
+{
+	return (getTagEndLine(tag) != 0)? true: false;
+}
+
+static bool isColumnFieldAvailable (const tagEntryInfo *const tag, const fieldDefinition *fdef CTAGS_ATTR_UNUSED)
+{
+	return (getTagEndLine(tag) != 0)? true: false;
+}
+
+static bool isEndColumnFieldAvailable (const tagEntryInfo *const tag, const fieldDefinition *fdef CTAGS_ATTR_UNUSED)
 {
 	return (getTagEndLine(tag) != 0)? true: false;
 }
@@ -1882,6 +1954,18 @@ static EsObject* getFieldValueForLineCommon (const tagEntryInfo *tag, const fiel
 		return ((int)tag->lineNumber == 0)
 			? es_nil
 			: es_integer_new ((int)tag->lineNumber);
+}
+
+static EsObject* getFieldValueForColumnCommon (const tagEntryInfo *tag, const fieldDefinition *fdef)
+{
+	if (fdef->ftype == FIELD_END_COLUMN)
+		return ((int)getTagEndLine (tag) == 0)
+			? es_nil
+			: es_integer_new ((int)getTagEndColumn (tag));
+	else
+		return ((int)getTagEndLine (tag) == 0)
+			? es_nil
+			: es_integer_new ((int)getTagColumn (tag));
 }
 
 static EsObject* checkFieldValueForLineCommon (const fieldDefinition *fdef, const EsObject *obj)

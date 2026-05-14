@@ -379,6 +379,7 @@ static bool collectCppMacroArguments (ptrArray *args)
 	vString *s = vStringNew ();
 	int c;
 	unsigned long ln = cppGetInputLineNumber ();
+	unsigned long col = cppGetInputColumnNumber ();
 	MIOPos pos = cppGetInputFilePosition ();
 	int depth = 1;
 
@@ -387,6 +388,7 @@ static bool collectCppMacroArguments (ptrArray *args)
 		if (s && vStringLength (s) == 1)
 		{
 			ln = cppGetInputLineNumber ();
+			col = cppGetInputColumnNumber ();
 			pos = cppGetInputFilePosition ();
 		}
 		c = cppGetc ();
@@ -400,7 +402,7 @@ static bool collectCppMacroArguments (ptrArray *args)
 			{
 				vStringStripTrailing(s);
 				cppMacroArg *a = cppMacroArgNew (vStringDeleteUnwrap (s), true,
-												 ln, pos);
+												 ln, col, pos);
 				ptrArrayAdd (args, a);
 				s = NULL;
 			}
@@ -416,7 +418,7 @@ static bool collectCppMacroArguments (ptrArray *args)
 		{
 			vStringStripTrailing(s);
 			cppMacroArg *a = cppMacroArgNew (vStringDeleteUnwrap (s), true,
-											 ln, pos);
+											 ln, col, pos);
 			ptrArrayAdd (args, a);
 			s = vStringNew ();
 		}
@@ -475,7 +477,9 @@ static bool expandCppMacro (cppMacroInfo *macroInfo,
 
 	{
 		cppMacroTokens *tokens = cppExpandMacro (macroInfo, args,
-												 lineNumber, filePosition);
+												 lineNumber,
+												 cppGetInputColumnNumber (),
+												 filePosition);
 		cppUngetMacroTokens (tokens);
 	}
 

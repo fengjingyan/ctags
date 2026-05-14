@@ -293,7 +293,7 @@ static bool collectMacroArguments (ptrArray *args)
 			if (depth == 0)
 			{
 				cppMacroArg *a = cppMacroArgNew (vStringDeleteUnwrap (s), true,
-												 ln, pos);
+												 ln, 0, pos);
 				ptrArrayAdd (args, a);
 				s = NULL;
 			}
@@ -308,7 +308,7 @@ static bool collectMacroArguments (ptrArray *args)
 		else if (tokenIsTypeVal (t, ','))
 		{
 			cppMacroArg *a = cppMacroArgNew (vStringDeleteUnwrap (s), true,
-											 ln, pos);
+											 ln, 0, pos);
 			ptrArrayAdd (args, a);
 			s = vStringNew ();
 		}
@@ -371,7 +371,7 @@ static bool expandCppMacro (cppMacroInfo *macroInfo,
 
 	{
 		cppMacroTokens *tokens = cppExpandMacro (macroInfo, args,
-												 lineNumber, filePosition);
+												 lineNumber, 0, filePosition);
 		cppUngetMacroTokens (tokens);
 	}
 

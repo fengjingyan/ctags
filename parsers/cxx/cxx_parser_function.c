@@ -2361,6 +2361,8 @@ try_again:
 						 */
 						pIdentifier = cxxTokenCreateAnonymousIdentifier(CXXTagKindPARAMETER, NULL);
 						pIdentifier->iLineNumber = t->pPrev->iLineNumber;
+						pIdentifier->iColumnNumber = t->pPrev->iColumnNumber;
+						pIdentifier->iEndColumnNumber = t->pPrev->iEndColumnNumber;
 						pIdentifier->oFilePosition = t->pPrev->oFilePosition;
 						pParamInfo->uAnonymous |= (0x1u << pParamInfo->uCount);
 						PARSER_TRASH_BOX (pIdentifier, cxxTokenDestroy);
@@ -2405,6 +2407,8 @@ try_again:
 			CXXToken * pFakeStart = cxxTokenCopy(pStart);
 			CXXToken * pFakeId = cxxTokenCreateAnonymousIdentifier(CXXTagKindPARAMETER, NULL);
 			pFakeId->iLineNumber = pStart->iLineNumber;
+			pFakeId->iColumnNumber = pStart->iColumnNumber;
+			pFakeId->iEndColumnNumber = pStart->iEndColumnNumber;
 			pFakeId->oFilePosition = pStart->oFilePosition;
 
 			pFakeStart->pNext = pFakeId;

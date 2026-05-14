@@ -114,6 +114,7 @@ typedef struct sUngetBuffer {
 	int dataSize;		/* the number of valid unget characters
 						   in the buffer */
 	unsigned long lineNumber;
+	unsigned long columnNumber;
 	MIOPos filePosition;
 	cppMacroInfo *macro;
 } ungetBuffer;
@@ -177,6 +178,7 @@ struct sCppMacroReplacementPartInfo {
 struct sCppMacroArg {
 	const char *str;
 	unsigned long lineNumber;
+	unsigned long columnNumber;
 	MIOPos filePosition;
 	bool free_str;
 };
@@ -189,6 +191,7 @@ struct sCppMacroTokens {
 typedef struct sCppMacroToken {
 	const char *str;
 	unsigned long lineNumber;
+	unsigned long columnNumber;
 	MIOPos filePosition;
 } cppMacroToken;
 
@@ -324,11 +327,13 @@ extern unsigned int cppGetDirectiveNestLevel (void)
 }
 
 static ungetBuffer *ungetBufferNew  (unsigned long lineNumber,
+									 unsigned long columnNumber,
 									 MIOPos filePosition,
 									 cppMacroInfo *macro)
 {
 	ungetBuffer *ub = xCalloc (1, ungetBuffer);
 	ub->lineNumber = lineNumber;
+	ub->columnNumber = columnNumber;
 	ub->filePosition = filePosition;
 	ub->macro = macro;
 	return ub;
@@ -671,6 +676,7 @@ extern void cppUngetc (const int c)
 {
 	if (Cpp.ungetBuffer == NULL)
 		Cpp.ungetBuffer = ungetBufferNew (getInputLineNumber(),
+										  getInputDisplayColumnNumber (),
 										  getInputFilePosition(),
 										  NULL);
 	ungetBufferUngetc (Cpp.ungetBuffer , c, Cpp.charOrStringContents);
@@ -695,6 +701,7 @@ extern void cppUngetString(const char * string, int len)
 {
 	if (Cpp.ungetBuffer == NULL)
 		Cpp.ungetBuffer = ungetBufferNew (getInputLineNumber(),
+										  getInputDisplayColumnNumber (),
 										  getInputFilePosition(),
 										  NULL);
 	ungetBufferUngetString (Cpp.ungetBuffer, string, len);
@@ -733,7 +740,8 @@ extern void cppUngetMacroTokens (cppMacroTokens *tokens)
 	for(size_t i = ptrArrayCount (a); i > 0; i--)
 	{
 		cppMacroToken *t = ptrArrayItem (a, i - 1);
-		ungetBuffer *ub = ungetBufferNew(t->lineNumber, t->filePosition,
+		ungetBuffer *ub = ungetBufferNew(t->lineNumber, t->columnNumber,
+										 t->filePosition,
 										 macro);
 		ungetBufferUngetString (ub, t->str, strlen (t->str));
 		ptrArrayAdd(Cpp.ungetBufferStack, ub);
@@ -781,6 +789,13 @@ extern MIOPos cppGetInputFilePosition (void)
 	if (Cpp.ungetBuffer)
 		return Cpp.ungetBuffer->filePosition;
 	return getInputFilePosition();
+}
+
+extern unsigned long cppGetInputColumnNumber (void)
+{
+	if (Cpp.ungetBuffer)
+		return Cpp.ungetBuffer->columnNumber;
+	return getInputDisplayColumnNumber();
 }
 
 
@@ -2245,13 +2260,16 @@ extern cppMacroInfo * cppFindMacro (const char *const name)
 }
 
 extern cppMacroArg *cppMacroArgNew (const char *str, bool free_str_when_deleting,
-									unsigned long lineNumber, MIOPos filePosition)
+									unsigned long lineNumber,
+									unsigned long columnNumber,
+									MIOPos filePosition)
 {
 	cppMacroArg *a = xMalloc (1, cppMacroArg);
 
 	a->str = str;
 	a->free_str = free_str_when_deleting;
 	a->lineNumber = lineNumber;
+	a->columnNumber = columnNumber;
 	a->filePosition = filePosition;
 
 	return a;
@@ -2266,11 +2284,14 @@ extern void cppMacroArgDelete (void *macroArg)
 	eFree (macroArg);
 }
 
-static cppMacroToken *cppMacroTokenNew(unsigned long lineNumber, MIOPos filePosition)
+static cppMacroToken *cppMacroTokenNew(unsigned long lineNumber,
+									   unsigned long columnNumber,
+									   MIOPos filePosition)
 {
 	cppMacroToken *t = xMalloc (1, cppMacroToken);
 	t->str = NULL;
 	t->lineNumber = lineNumber;
+	t->columnNumber = columnNumber;
 	t->filePosition = filePosition;
 	return t;
 }
@@ -2305,6 +2326,7 @@ static void cppMacroTokensDelete (cppMacroTokens *tokens)
 extern cppMacroTokens *cppExpandMacro (cppMacroInfo * macro,
 									   const ptrArray *args,
 									   unsigned long lineNumber,
+									   unsigned long columnNumber,
 									   MIOPos filePosition)
 {
 	if(!macro)
@@ -2321,7 +2343,7 @@ extern cppMacroTokens *cppExpandMacro (cppMacroInfo * macro,
 		return NULL;
 
 	cppMacroTokens *tokens = cppMacroTokensNew (macro);
-	cppMacroToken *t = cppMacroTokenNew(lineNumber, filePosition);
+	cppMacroToken *t = cppMacroTokenNew(lineNumber, columnNumber, filePosition);
 	ptrArrayAdd (tokens->tarray, t);
 
 	vString * vstr = vStringNew();
@@ -2337,7 +2359,7 @@ extern cppMacroTokens *cppExpandMacro (cppMacroInfo * macro,
 				 * at the beginning of the current macro expansion. */
 				t->str = vStringDeleteUnwrap (vstr);
 
-				t = cppMacroTokenNew(lineNumber, filePosition);
+				t = cppMacroTokenNew(lineNumber, columnNumber, filePosition);
 				ptrArrayAdd (tokens->tarray, t);
 
 				vstr = vStringNewCopy (r->constant);
@@ -2350,7 +2372,7 @@ extern cppMacroTokens *cppExpandMacro (cppMacroInfo * macro,
 				t->str = vStringDeleteUnwrap (vstr);
 
 				cppMacroArg *a = ptrArrayItem (args, r->parameterIndex);
-				t = cppMacroTokenNew(a->lineNumber, a->filePosition);
+				t = cppMacroTokenNew(a->lineNumber, a->columnNumber, a->filePosition);
 				ptrArrayAdd (tokens->tarray, t);
 
 				vstr = vStringNewInit(a->str);
@@ -2363,7 +2385,7 @@ extern cppMacroTokens *cppExpandMacro (cppMacroInfo * macro,
 						t->str = vStringDeleteUnwrap (vstr);
 
 						a = ptrArrayItem (args, idx);
-						t = cppMacroTokenNew(a->lineNumber, a->filePosition);
+						t = cppMacroTokenNew(a->lineNumber, a->columnNumber, a->filePosition);
 						ptrArrayAdd (tokens->tarray, t);
 						vstr = vStringNew();
 
@@ -2410,6 +2432,7 @@ extern vString *cppExpandMacroAsNewString(cppMacroInfo * macro, const ptrArray *
 {
 	cppMacroTokens * tokens = cppExpandMacro (macro, args,
 											  cppGetInputLineNumber (),
+											  cppGetInputColumnNumber (),
 											  cppGetInputFilePosition ());
 	if (!tokens)
 		return NULL;

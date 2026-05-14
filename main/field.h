@@ -43,6 +43,7 @@ typedef enum eFieldType { /* extension field content control */
 	FIELD_KIND,
 	FIELD_LANGUAGE,
 	FIELD_LINE_NUMBER,
+	FIELD_COLUMN_NUMBER,
 	FIELD_SCOPE,
 	FIELD_TYPE_REF,
 	FIELD_KIND_KEY,
@@ -63,6 +64,7 @@ typedef enum eFieldType { /* extension field content control */
 	FIELD_EXTRAS,
 	FIELD_XPATH,
 	FIELD_END_LINE,
+	FIELD_END_COLUMN,
 	FIELD_EPOCH,
 	FIELD_NTH,
 

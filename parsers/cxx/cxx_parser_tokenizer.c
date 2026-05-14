@@ -1168,6 +1168,7 @@ static void cxxParserParseNextTokenApplyReplacement(
 		cppMacroInfo * pInfo,
 		CXXToken * pParameterChainToken,
 		int iMacroLineNumber,
+		unsigned long iMacroColumnNumber,
 		MIOPos oMacroFilePosition
 	)
 {
@@ -1202,6 +1203,7 @@ static void cxxParserParseNextTokenApplyReplacement(
 			cppMacroArg *pArg = cppMacroArgNew(vStringValue(pParam->pszWord),
 											   false,
 											   pParam->iLineNumber,
+											   pParam->iColumnNumber,
 											   pParam->oFilePosition);
 			ptrArrayAdd(pMacroArgs, pArg);
 			pParam = pParam->pNext;
@@ -1210,6 +1212,7 @@ static void cxxParserParseNextTokenApplyReplacement(
 
 	cppMacroTokens *pMacroTokens = cppExpandMacro(pInfo, pMacroArgs,
 												  (unsigned long)iMacroLineNumber,
+												  iMacroColumnNumber,
 												  oMacroFilePosition);
 	ptrArrayDelete(pMacroArgs);	// NULL is acceptable.
 	if(pParameters)
@@ -1298,6 +1301,8 @@ bool cxxParserParseNextToken(void)
 
 	// This must be done after getting char from input
 	t->iLineNumber = cppGetInputLineNumber();
+	t->iColumnNumber = cppGetInputColumnNumber();
+	t->iEndColumnNumber = t->iColumnNumber + 1;
 	t->oFilePosition = cppGetInputFilePosition();
 
 	if(g_cxx.iChar == EOF)
@@ -1360,6 +1365,7 @@ bool cxxParserParseNextToken(void)
 			vStringPut(t->pszWord,g_cxx.iChar);
 			g_cxx.iChar = cppGetc();
 		}
+		t->iEndColumnNumber = t->iColumnNumber + vStringLength(t->pszWord);
 
 		int iCXXKeyword = lookupKeyword(t->pszWord->buffer,g_cxx.eLangType);
 		if(iCXXKeyword >= 0)
@@ -1383,6 +1389,7 @@ bool cxxParserParseNextToken(void)
 
 			cppMacroInfo * pMacro = cppFindMacro(vStringValue(t->pszWord));
 			int iMacroLineNumber = t->iLineNumber;
+			unsigned long iMacroColumnNumber = t->iColumnNumber;
 			MIOPos oMacroFilePosition = t->oFilePosition;
 
 #ifdef DEBUG
@@ -1469,6 +1476,7 @@ bool cxxParserParseNextToken(void)
 								pMacro,
 								pParameterChain,
 								iMacroLineNumber,
+								iMacroColumnNumber,
 								oMacroFilePosition
 							);
 

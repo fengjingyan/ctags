@@ -77,6 +77,8 @@ typedef struct _CXXToken
 	unsigned int bInternalScopeExported: 1;
 
 	int iLineNumber;
+	unsigned long iColumnNumber;
+	unsigned long iEndColumnNumber;
 	MIOPos oFilePosition;
 
 	struct _CXXToken * pNext;

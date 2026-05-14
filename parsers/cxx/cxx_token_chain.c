@@ -462,6 +462,8 @@ static CXXToken * cxxTokenCreatePlaceholder(CXXToken * pToken)
 	CXXToken * pPlaceholder = cxxTokenCreate();
 
 	pPlaceholder->iLineNumber = pToken->iLineNumber;
+	pPlaceholder->iColumnNumber = pToken->iColumnNumber;
+	pPlaceholder->iEndColumnNumber = pToken->iEndColumnNumber;
 	pPlaceholder->oFilePosition = pToken->oFilePosition;
 	pPlaceholder->eType = CXXTokenTypeUnknown;
 
@@ -538,6 +540,8 @@ CXXToken * cxxTokenChainCondenseIntoToken(CXXTokenChain * tc,unsigned int uFlags
 
 	pCondensed->eType = CXXTokenTypeUnknown;
 	pCondensed->iLineNumber = t->iLineNumber;
+	pCondensed->iColumnNumber = t->iColumnNumber;
+	pCondensed->iEndColumnNumber = t->iEndColumnNumber;
 	pCondensed->oFilePosition = t->oFilePosition;
 
 	while(t)
@@ -1027,6 +1031,8 @@ CXXToken * cxxTokenChainExtractRange(
 
 	CXXToken * pRet = cxxTokenCreate();
 	pRet->iLineNumber = pToken->iLineNumber;
+	pRet->iColumnNumber = pToken->iColumnNumber;
+	pRet->iEndColumnNumber = pToken->iEndColumnNumber;
 	pRet->oFilePosition = pToken->oFilePosition;
 	pRet->eType = pToken->eType;
 
@@ -1081,6 +1087,8 @@ CXXToken * cxxTokenChainExtractRangeFilterTypeName(
 	// Got at least one non-excluded keyword
 	CXXToken * pRet = cxxTokenCreate();
 	pRet->iLineNumber = pToken->iLineNumber;
+	pRet->iColumnNumber = pToken->iColumnNumber;
+	pRet->iEndColumnNumber = pToken->iEndColumnNumber;
 	pRet->oFilePosition = pToken->oFilePosition;
 	pRet->eType = pToken->eType;
 
@@ -1146,6 +1154,8 @@ CXXToken * cxxTokenChainExtractIndexRange(
 
 	CXXToken * pRet = cxxTokenCreate();
 	pRet->iLineNumber = pToken->iLineNumber;
+	pRet->iColumnNumber = pToken->iColumnNumber;
+	pRet->iEndColumnNumber = pToken->iEndColumnNumber;
 	pRet->oFilePosition = pToken->oFilePosition;
 	pRet->eType = pToken->eType;
 

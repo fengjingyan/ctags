@@ -302,6 +302,8 @@ static int addExtensionFields (tagWriter *writer, MIO *mio, const tagEntryInfo *
 		sep [0] = '\0';
 	}
 
+	length += renderExtensionFieldMaybe (writer, FIELD_COLUMN_NUMBER, tag, sep, mio);
+
 	length += renderExtensionFieldMaybe (writer, FIELD_LANGUAGE, tag, sep, mio);
 
 	if (isFieldEnabled (FIELD_SCOPE))

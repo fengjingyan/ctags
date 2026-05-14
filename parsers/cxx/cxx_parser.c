@@ -112,6 +112,8 @@ bool cxxParserParseAndCondenseCurrentSubchain(
 	CXXToken * pChainToken = cxxTokenCreate();
 
 	pChainToken->iLineNumber = pInitial->iLineNumber;
+	pChainToken->iColumnNumber = pInitial->iColumnNumber;
+	pChainToken->iEndColumnNumber = pInitial->iEndColumnNumber;
 	pChainToken->oFilePosition = pInitial->oFilePosition;
 	// see the declaration of CXXTokenType enum.
 	// Shifting by 8 gives the corresponding chain marker
@@ -153,6 +155,8 @@ bool cxxParserParseAndCondenseCurrentSubchain(
 		// Fake the terminator
 		CXXToken * pFakeLast = cxxTokenCreate();
 		pFakeLast->iLineNumber = pChainToken->iLineNumber;
+		pFakeLast->iColumnNumber = pChainToken->iColumnNumber;
+		pFakeLast->iEndColumnNumber = pChainToken->iEndColumnNumber;
 		pFakeLast->oFilePosition = pChainToken->oFilePosition;
 		switch(eTermType)
 		{
@@ -517,6 +521,7 @@ static bool cxxParserParseEnumStructClassOrUnionFullDeclarationTrailer(
 
 	MIOPos oFilePosition = cppGetInputFilePosition();
 	int iFileLine = cppGetInputLineNumber();
+	unsigned long iFileColumn = cppGetInputColumnNumber();
 	int eMaybeTokenTypeOpeningBracket = (g_cxx.bConfirmedCPPLanguage
 										 ? 0
 										 : CXXTokenTypeOpeningBracket);
@@ -548,6 +553,8 @@ static bool cxxParserParseEnumStructClassOrUnionFullDeclarationTrailer(
 	CXXToken * pIdentifier = cxxTokenCreate();
 	pIdentifier->oFilePosition = oFilePosition;
 	pIdentifier->iLineNumber = iFileLine;
+	pIdentifier->iColumnNumber = iFileColumn;
+	pIdentifier->iEndColumnNumber = iFileColumn + strlen(szTypeName);
 	pIdentifier->eType = CXXTokenTypeIdentifier;
 	pIdentifier->bFollowedBySpace = true;
 	vStringCatS(pIdentifier->pszWord,szTypeName);

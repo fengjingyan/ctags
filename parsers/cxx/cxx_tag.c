@@ -373,6 +373,9 @@ tagEntryInfo * cxxRefTagBegin(unsigned int uKind, int iRole, CXXToken * pToken)
 		);
 
 	updateTagLine (&g_oCXXTag, pToken->iLineNumber, pToken->oFilePosition);
+	setTagColumn (&g_oCXXTag, pToken->iColumnNumber);
+	setTagEndLine (&g_oCXXTag, pToken->iLineNumber);
+	setTagEndColumn (&g_oCXXTag, pToken->iEndColumnNumber);
 	g_oCXXTag.isFileScope = false;
 
 	if(!cxxScopeIsGlobal())

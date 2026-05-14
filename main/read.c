@@ -341,6 +341,70 @@ extern int getInputColumnNumber (void)
 	return ret >= 0 ? ret : 0;
 }
 
+#define DISPLAY_TAB_WIDTH 8
+
+extern unsigned long getInputDisplayColumnNumberForByteColumn (int byteColumn)
+{
+	unsigned long column = 0;
+	const unsigned char *p;
+	const unsigned char *end;
+
+	if (!File.line || byteColumn <= 0)
+		return 0;
+
+	p = (const unsigned char *)vStringValue (File.line);
+	end = p + byteColumn;
+
+	while (p < end && *p != '\0' && *p != '\n' && *p != '\r')
+	{
+		unsigned char c = *p;
+
+		if (c == '\t')
+		{
+			column += DISPLAY_TAB_WIDTH - (column % DISPLAY_TAB_WIDTH);
+			p++;
+		}
+		else if ((c & 0x80) == 0)
+		{
+			column++;
+			p++;
+		}
+		else if ((c & 0xe0) == 0xc0 && p + 1 < end
+				 && (p[1] & 0xc0) == 0x80)
+		{
+			column++;
+			p += 2;
+		}
+		else if ((c & 0xf0) == 0xe0 && p + 2 < end
+				 && (p[1] & 0xc0) == 0x80
+				 && (p[2] & 0xc0) == 0x80)
+		{
+			column++;
+			p += 3;
+		}
+		else if ((c & 0xf8) == 0xf0 && p + 3 < end
+				 && (p[1] & 0xc0) == 0x80
+				 && (p[2] & 0xc0) == 0x80
+				 && (p[3] & 0xc0) == 0x80)
+		{
+			column++;
+			p += 4;
+		}
+		else
+		{
+			column++;
+			p++;
+		}
+	}
+
+	return column;
+}
+
+extern unsigned long getInputDisplayColumnNumber (void)
+{
+	return getInputDisplayColumnNumberForByteColumn (getInputColumnNumber ());
+}
+
 extern const char *getInputFileName (void)
 {
 	if (!File.input.name)

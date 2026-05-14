@@ -128,6 +128,8 @@ extern unsigned long getInputLineNumberForFileOffset(long offset);
  * return: [absolute]
  */
 extern int getInputColumnNumber (void);
+extern unsigned long getInputDisplayColumnNumber (void);
+extern unsigned long getInputDisplayColumnNumberForByteColumn (int byteColumn);
 
 /* return: [current] */
 extern MIOPos getInputFilePosition (void);

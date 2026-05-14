@@ -197,14 +197,19 @@ extern cppMacroInfo * cppFindMacro (const char *const name);
 extern void cppUngetMacroTokens (cppMacroTokens *tokens);
 
 extern cppMacroArg *cppMacroArgNew (const char *str, bool free_str_when_deleting,
-									unsigned long lineNumber, MIOPos filePosition);
+									unsigned long lineNumber,
+									unsigned long columnNumber,
+									MIOPos filePosition);
 extern void cppMacroArgDelete (void *macroArg);
 extern cppMacroTokens *cppExpandMacro (cppMacroInfo * macro, const ptrArray *args,
-									   unsigned long lineNumber, MIOPos filePosition);
+									   unsigned long lineNumber,
+									   unsigned long columnNumber,
+									   MIOPos filePosition);
 extern vString *cppExpandMacroAsNewString (cppMacroInfo * macro, const ptrArray *args);
 
 extern unsigned long cppGetInputLineNumber (void);
 extern MIOPos cppGetInputFilePosition (void);
+extern unsigned long cppGetInputColumnNumber (void);
 
 #ifdef DEBUG
 extern vString *cppFlattenMacroTokensToNewString (cppMacroTokens *tokens);

@@ -128,6 +128,8 @@ CXXToken * cxxTokenCopy(CXXToken * pToken)
 {
 	CXXToken * pRetToken = cxxTokenCreate();
 	pRetToken->iLineNumber = pToken->iLineNumber;
+	pRetToken->iColumnNumber = pToken->iColumnNumber;
+	pRetToken->iEndColumnNumber = pToken->iEndColumnNumber;
 	pRetToken->oFilePosition = pToken->oFilePosition;
 	pRetToken->eType = pToken->eType;
 	pRetToken->eKeyword = pToken->eKeyword;
@@ -173,6 +175,8 @@ CXXToken * cxxTokenCreateKeyword(int iLineNumber,MIOPos oFilePosition,CXXKeyword
 {
 	CXXToken * pToken = cxxTokenCreate();
 	pToken->iLineNumber = iLineNumber;
+	pToken->iColumnNumber = 0;
+	pToken->iEndColumnNumber = 0;
 	pToken->oFilePosition = oFilePosition;
 	pToken->eType = CXXTokenTypeKeyword;
 	pToken->eKeyword = eKeyword;
@@ -191,6 +195,8 @@ CXXToken * cxxTokenCreateAnonymousIdentifier(unsigned int uTagKind, const char *
 	t->eType = CXXTokenTypeIdentifier;
 	t->bFollowedBySpace = true;
 	t->iLineNumber = cppGetInputLineNumber();
+	t->iColumnNumber = cppGetInputColumnNumber();
+	t->iEndColumnNumber = t->iColumnNumber + vStringLength (t->pszWord);
 	t->oFilePosition = cppGetInputFilePosition();
 
 	return t;

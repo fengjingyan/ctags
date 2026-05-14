@@ -2055,6 +2055,8 @@ extern void setTagPositionFromTag (tagEntryInfo *const dst,
 								   const tagEntryInfo *const src)
 {
 	updateTagLine (dst, src->lineNumber, src->filePosition);
+	setTagColumn (dst, getTagColumn (src));
+	setTagEndColumn (dst, getTagEndColumn (src));
 	dst->boundaryInfo = src->boundaryInfo;
 }
 

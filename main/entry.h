@@ -86,6 +86,7 @@ struct sTagEntryInfo {
 
 	unsigned long lineNumber;     /* line number of tag;
 									 use updateTagLine() for updating this member. */
+	unsigned long columnNumber;   /* one-based character column of tag */
 	const char* pattern;	      /* pattern for locating input line
 				       * (may be NULL if not present) *//*  */
 	MIOPos      filePosition;     /* file position of line containing tag */
@@ -136,6 +137,7 @@ struct sTagEntryInfo {
 		const char* xpath;
 #endif
 		unsigned long _endLine;	/* Don't set directly. Use setTagEndLine() and getTagEndLine() */
+		unsigned long _endColumn;
 		time_t epoch;
 #define NO_NTH_FIELD -1
 		short nth;
@@ -260,7 +262,11 @@ int           anyKindsEntryInScopeRecursive (int corkIndex,
 extern void    updateTagLine(tagEntryInfo *tag, unsigned long lineNumber, MIOPos filePosition);
 extern void    setTagEndLine (tagEntryInfo *tag, unsigned long endLine);
 extern void    setTagEndLineToCorkEntry (int corkIndex, unsigned long endLine);
+#define getTagColumn(tag) ((tag)->columnNumber)
+#define setTagColumn(tag, column) ((tag)->columnNumber = (column))
 #define getTagEndLine(tag) ((tag)->extensionFields._endLine)
+#define getTagEndColumn(tag) ((tag)->extensionFields._endColumn)
+#define setTagEndColumn(tag, column) ((tag)->extensionFields._endColumn = (column))
 
 extern int     queryIntervalTabByLine(unsigned long lineNum);
 extern int     queryIntervalTabByRange(unsigned long startLine, unsigned long endLine);
