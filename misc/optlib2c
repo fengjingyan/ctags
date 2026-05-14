@@ -656,6 +656,7 @@ sub parse_optlib {
     my $receiver = 0;
     while (<$optlibfh>) {
 	chomp;
+	s/\r$//;
 
 	if (/^\}\}$/ && $receiver && ($receiver != 1)) {
 	    $receiver->('}}');

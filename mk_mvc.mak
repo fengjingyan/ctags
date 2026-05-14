@@ -109,6 +109,7 @@ $(RES_OBJ): win32/ctags.rc win32/ctags.exe.manifest win32/resource.h
 	$(RC) /nologo /l 0x409 /Fo$@ $*.rc
 
 copy_gnulib_heads:
+	- del gnulib\locale.h gnulib\string.h gnulib\unistd.h gnulib\wchar.h
 	copy win32\config_mvc.h config.h
 	copy win32\gnulib_h\langinfo.h gnulib
 	copy win32\gnulib_h\fnmatch.h gnulib
@@ -117,4 +118,4 @@ clean:
 	- del *.obj main\*.obj optlib\*.obj parsers\*.obj parsers\cxx\*.obj gnulib\*.obj misc\packcc\*.obj peg\*.obj extra-cmds\*.obj libreadtags\*.obj dsl\*.obj win32\mkstemp\*.obj win32\*.res main\repoinfo.h
 	- del ctags.exe readtags.exe optscript.exe $(PACKCC)
 	- del tags
-	- del config.h gnulib\langinfo.h gnulib\fnmatch.h gnulib\*.obj gnulib\malloc\*.obj
+	- del config.h gnulib\langinfo.h gnulib\fnmatch.h gnulib\locale.h gnulib\string.h gnulib\unistd.h gnulib\wchar.h gnulib\*.obj gnulib\malloc\*.obj

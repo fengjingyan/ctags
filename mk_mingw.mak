@@ -47,7 +47,11 @@ PARSER_HEADS += $(XML_HEADS)
 endif
 ifeq (yes, $(WITH_JSON))
 CFLAGS += -DHAVE_JANSSON=1 $(shell pkg-config --cflags jansson)
+ifeq (yes, $(STATIC))
+LIBS += $(shell pkg-config --static --libs jansson)
+else
 LIBS += $(shell pkg-config --libs jansson)
+endif
 endif
 
 ifdef DEBUG
@@ -56,6 +60,10 @@ OPT = -g
 else
 OPT = -O4 -Os -fexpensive-optimizations
 LDFLAGS = -s
+endif
+
+ifeq (yes, $(STATIC))
+LDFLAGS += -static -static-libgcc
 endif
 
 .SUFFIXES: .c .o .ctags .peg
@@ -136,5 +144,5 @@ clean:
 	$(SILENT) echo Cleaning
 	$(SILENT) rm -f ctags.exe readtags.exe optscript.exe $(PACKCC)
 	$(SILENT) rm -f tags
-	$(SILENT) rm -f main/*.o optlib/*.o parsers/*.o parsers/cxx/*.o gnulib/*.o misc/packcc/*.o peg/*.o extra-cmds/*.o libreadtags/*.o dsl/*.o win32/*.o win32/mkstemp/*.o
+	$(SILENT) rm -f main/*.o optlib/*.o parsers/*.o parsers/cxx/*.o gnulib/*.o misc/packcc/*.o misc/packcc/src/*.o peg/*.o extra-cmds/*.o libreadtags/*.o dsl/*.o win32/*.o win32/mkstemp/*.o
 	$(SILENT) rm -f config.h gnulib/langinfo.h gnulib/locale.h gnulib/unistd.h gnulib/fnmatch.h gnulib/string.h gnulib/wchar.h
