@@ -2057,6 +2057,10 @@ extern void setTagPositionFromTag (tagEntryInfo *const dst,
 	updateTagLine (dst, src->lineNumber, src->filePosition);
 	setTagColumn (dst, getTagColumn (src));
 	setTagEndColumn (dst, getTagEndColumn (src));
+	setTagSelectionStartLine (dst, getTagSelectionStartLine (src));
+	setTagSelectionStartColumn (dst, getTagSelectionStartColumn (src));
+	setTagSelectionEndLine (dst, getTagSelectionEndLine (src));
+	setTagSelectionEndColumn (dst, getTagSelectionEndColumn (src));
 	dst->boundaryInfo = src->boundaryInfo;
 }
 

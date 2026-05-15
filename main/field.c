@@ -69,6 +69,10 @@ static const char *renderFieldScopeKindName(const tagEntryInfo *const tag, const
 static const char *renderFieldEnd (const tagEntryInfo *const tag, const char *value, vString* b);
 static const char *renderFieldColumn (const tagEntryInfo *const tag, const char *value, vString* b);
 static const char *renderFieldEndColumn (const tagEntryInfo *const tag, const char *value, vString* b);
+static const char *renderFieldSelectionStartLine (const tagEntryInfo *const tag, const char *value, vString* b);
+static const char *renderFieldSelectionStartColumn (const tagEntryInfo *const tag, const char *value, vString* b);
+static const char *renderFieldSelectionEndLine (const tagEntryInfo *const tag, const char *value, vString* b);
+static const char *renderFieldSelectionEndColumn (const tagEntryInfo *const tag, const char *value, vString* b);
 static const char *renderFieldEpoch (const tagEntryInfo *const tag, const char *value, vString* b);
 static const char *renderFieldNth (const tagEntryInfo *const tag, const char *value, vString* b);
 
@@ -88,6 +92,7 @@ static bool     isXpathFieldAvailable     (const tagEntryInfo *const tag, const 
 static bool     isEndFieldAvailable       (const tagEntryInfo *const tag, const fieldDefinition *fdef);
 static bool     isColumnFieldAvailable    (const tagEntryInfo *const tag, const fieldDefinition *fdef);
 static bool     isEndColumnFieldAvailable (const tagEntryInfo *const tag, const fieldDefinition *fdef);
+static bool     isSelectionRangeFieldAvailable (const tagEntryInfo *const tag, const fieldDefinition *fdef);
 static bool     isEpochAvailable          (const tagEntryInfo *const tag, const fieldDefinition *fdef);
 static bool     isNthAvailable            (const tagEntryInfo *const tag, const fieldDefinition *fdef);
 
@@ -110,6 +115,7 @@ static EsObject* setFieldValueForSignature (tagEntryInfo *, const fieldDefinitio
 static EsObject* getFieldValueForRoles (const tagEntryInfo *, const fieldDefinition *);
 static EsObject* getFieldValueForLineCommon (const tagEntryInfo *, const fieldDefinition *);
 static EsObject* getFieldValueForColumnCommon (const tagEntryInfo *, const fieldDefinition *);
+static EsObject* getFieldValueForSelectionRangeCommon (const tagEntryInfo *, const fieldDefinition *);
 static EsObject* checkFieldValueForLineCommon (const fieldDefinition *, const EsObject *);
 static EsObject* setFieldValueForLineCommon (tagEntryInfo *, const fieldDefinition *, const EsObject *);
 static EsObject* setFieldValueForInherits (tagEntryInfo *, const fieldDefinition *, const EsObject *);
@@ -463,7 +469,7 @@ static fieldDefinition fieldDefinitionsUniversal [] = {
 
 	},
 	[FIELD_END_COLUMN - FIELDS_UCTAGS_START] = {
-		.letter				= 'Q',
+		.letter				= 'd',
 		.name				= "endColumn",
 		.description		= "One-based character column just after the tag name",
 		.enabled			= false,
@@ -474,6 +480,70 @@ static fieldDefinition fieldDefinitionsUniversal [] = {
 		.dataType			= FIELDTYPE_INTEGER,
 		.getterValueType    = "int",
 		.getValueObject     = getFieldValueForColumnCommon,
+		.setterValueType    = NULL,
+		.checkValueForSetter= NULL,
+		.setValueObject     = NULL,
+	},
+	[FIELD_SELECTION_START_LINE - FIELDS_UCTAGS_START] = {
+		.letter				= 'g',
+		.name				= "selectionStartLine",
+		.description		= "One-based line where the selection range starts",
+		.enabled			= false,
+		.render				= renderFieldSelectionStartLine,
+		.renderNoEscaping	= NULL,
+		.doesContainAnyChar = NULL,
+		.isValueAvailable	= isSelectionRangeFieldAvailable,
+		.dataType			= FIELDTYPE_INTEGER,
+		.getterValueType    = "int",
+		.getValueObject     = getFieldValueForSelectionRangeCommon,
+		.setterValueType    = NULL,
+		.checkValueForSetter= NULL,
+		.setValueObject     = NULL,
+	},
+	[FIELD_SELECTION_START_COLUMN - FIELDS_UCTAGS_START] = {
+		.letter				= 'h',
+		.name				= "selectionStartColumn",
+		.description		= "One-based character column where the selection range starts",
+		.enabled			= false,
+		.render				= renderFieldSelectionStartColumn,
+		.renderNoEscaping	= NULL,
+		.doesContainAnyChar = NULL,
+		.isValueAvailable	= isSelectionRangeFieldAvailable,
+		.dataType			= FIELDTYPE_INTEGER,
+		.getterValueType    = "int",
+		.getValueObject     = getFieldValueForSelectionRangeCommon,
+		.setterValueType    = NULL,
+		.checkValueForSetter= NULL,
+		.setValueObject     = NULL,
+	},
+	[FIELD_SELECTION_END_LINE - FIELDS_UCTAGS_START] = {
+		.letter				= 'u',
+		.name				= "selectionEndLine",
+		.description		= "One-based line where the selection range ends",
+		.enabled			= false,
+		.render				= renderFieldSelectionEndLine,
+		.renderNoEscaping	= NULL,
+		.doesContainAnyChar = NULL,
+		.isValueAvailable	= isSelectionRangeFieldAvailable,
+		.dataType			= FIELDTYPE_INTEGER,
+		.getterValueType    = "int",
+		.getValueObject     = getFieldValueForSelectionRangeCommon,
+		.setterValueType    = NULL,
+		.checkValueForSetter= NULL,
+		.setValueObject     = NULL,
+	},
+	[FIELD_SELECTION_END_COLUMN - FIELDS_UCTAGS_START] = {
+		.letter				= 'v',
+		.name				= "selectionEndColumn",
+		.description		= "One-based character column just after the selection range",
+		.enabled			= false,
+		.render				= renderFieldSelectionEndColumn,
+		.renderNoEscaping	= NULL,
+		.doesContainAnyChar = NULL,
+		.isValueAvailable	= isSelectionRangeFieldAvailable,
+		.dataType			= FIELDTYPE_INTEGER,
+		.getterValueType    = "int",
+		.getValueObject     = getFieldValueForSelectionRangeCommon,
 		.setterValueType    = NULL,
 		.checkValueForSetter= NULL,
 		.setValueObject     = NULL,
@@ -1201,6 +1271,66 @@ static const char *renderFieldEndColumn (const tagEntryInfo *const tag,
 		return NULL;
 }
 
+static const char *renderFieldSelectionStartLine (const tagEntryInfo *const tag,
+												 const char *value CTAGS_ATTR_UNUSED,
+												 vString* b)
+{
+	static char buf[21];
+
+	if (getTagSelectionStartLine (tag) != 0)
+	{
+		sprintf (buf, "%lu", getTagSelectionStartLine (tag));
+		return renderAsIs (b, buf);
+	}
+	else
+		return NULL;
+}
+
+static const char *renderFieldSelectionStartColumn (const tagEntryInfo *const tag,
+												   const char *value CTAGS_ATTR_UNUSED,
+												   vString* b)
+{
+	static char buf[21];
+
+	if (getTagSelectionStartLine (tag) != 0)
+	{
+		sprintf (buf, "%lu", getTagSelectionStartColumn (tag));
+		return renderAsIs (b, buf);
+	}
+	else
+		return NULL;
+}
+
+static const char *renderFieldSelectionEndLine (const tagEntryInfo *const tag,
+											   const char *value CTAGS_ATTR_UNUSED,
+											   vString* b)
+{
+	static char buf[21];
+
+	if (getTagSelectionStartLine (tag) != 0)
+	{
+		sprintf (buf, "%lu", getTagSelectionEndLine (tag));
+		return renderAsIs (b, buf);
+	}
+	else
+		return NULL;
+}
+
+static const char *renderFieldSelectionEndColumn (const tagEntryInfo *const tag,
+												 const char *value CTAGS_ATTR_UNUSED,
+												 vString* b)
+{
+	static char buf[21];
+
+	if (getTagSelectionStartLine (tag) != 0)
+	{
+		sprintf (buf, "%lu", getTagSelectionEndColumn (tag));
+		return renderAsIs (b, buf);
+	}
+	else
+		return NULL;
+}
+
 static const char *renderFieldEpoch (const tagEntryInfo *const tag,
 									  const char *value, vString* b)
 {
@@ -1291,6 +1421,11 @@ static bool isColumnFieldAvailable (const tagEntryInfo *const tag, const fieldDe
 static bool isEndColumnFieldAvailable (const tagEntryInfo *const tag, const fieldDefinition *fdef CTAGS_ATTR_UNUSED)
 {
 	return (getTagEndLine(tag) != 0)? true: false;
+}
+
+static bool isSelectionRangeFieldAvailable (const tagEntryInfo *const tag, const fieldDefinition *fdef CTAGS_ATTR_UNUSED)
+{
+	return (getTagSelectionStartLine(tag) != 0)? true: false;
 }
 
 static bool isEpochAvailable (const tagEntryInfo *const tag, const fieldDefinition *fdef CTAGS_ATTR_UNUSED)
@@ -1966,6 +2101,26 @@ static EsObject* getFieldValueForColumnCommon (const tagEntryInfo *tag, const fi
 		return ((int)getTagEndLine (tag) == 0)
 			? es_nil
 			: es_integer_new ((int)getTagColumn (tag));
+}
+
+static EsObject* getFieldValueForSelectionRangeCommon (const tagEntryInfo *tag, const fieldDefinition *fdef)
+{
+	if ((int)getTagSelectionStartLine (tag) == 0)
+		return es_nil;
+
+	switch (fdef->ftype)
+	{
+	case FIELD_SELECTION_START_LINE:
+		return es_integer_new ((int)getTagSelectionStartLine (tag));
+	case FIELD_SELECTION_START_COLUMN:
+		return es_integer_new ((int)getTagSelectionStartColumn (tag));
+	case FIELD_SELECTION_END_LINE:
+		return es_integer_new ((int)getTagSelectionEndLine (tag));
+	case FIELD_SELECTION_END_COLUMN:
+		return es_integer_new ((int)getTagSelectionEndColumn (tag));
+	default:
+		return es_nil;
+	}
 }
 
 static EsObject* checkFieldValueForLineCommon (const fieldDefinition *fdef, const EsObject *obj)

@@ -138,6 +138,10 @@ struct sTagEntryInfo {
 #endif
 		unsigned long _endLine;	/* Don't set directly. Use setTagEndLine() and getTagEndLine() */
 		unsigned long _endColumn;
+		unsigned long _selectionStartLine;
+		unsigned long _selectionStartColumn;
+		unsigned long _selectionEndLine;
+		unsigned long _selectionEndColumn;
 		time_t epoch;
 #define NO_NTH_FIELD -1
 		short nth;
@@ -267,6 +271,14 @@ extern void    setTagEndLineToCorkEntry (int corkIndex, unsigned long endLine);
 #define getTagEndLine(tag) ((tag)->extensionFields._endLine)
 #define getTagEndColumn(tag) ((tag)->extensionFields._endColumn)
 #define setTagEndColumn(tag, column) ((tag)->extensionFields._endColumn = (column))
+#define getTagSelectionStartLine(tag) ((tag)->extensionFields._selectionStartLine)
+#define setTagSelectionStartLine(tag, line) ((tag)->extensionFields._selectionStartLine = (line))
+#define getTagSelectionStartColumn(tag) ((tag)->extensionFields._selectionStartColumn)
+#define setTagSelectionStartColumn(tag, column) ((tag)->extensionFields._selectionStartColumn = (column))
+#define getTagSelectionEndLine(tag) ((tag)->extensionFields._selectionEndLine)
+#define setTagSelectionEndLine(tag, line) ((tag)->extensionFields._selectionEndLine = (line))
+#define getTagSelectionEndColumn(tag) ((tag)->extensionFields._selectionEndColumn)
+#define setTagSelectionEndColumn(tag, column) ((tag)->extensionFields._selectionEndColumn = (column))
 
 extern int     queryIntervalTabByLine(unsigned long lineNum);
 extern int     queryIntervalTabByRange(unsigned long startLine, unsigned long endLine);
