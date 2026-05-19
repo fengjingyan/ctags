@@ -1137,9 +1137,11 @@ static int directiveDefine (const int c, bool undef)
 
 	if (cppIsident1 (c))
 	{
+		unsigned long nameColumn = cppGetInputColumnNumber ();
 		readIdentifier (c, Cpp.directive.name);
 		if (! isIgnore ())
 		{
+			unsigned long nameEndColumn = nameColumn + vStringLength (Cpp.directive.name);
 			unsigned long 	lineNumber = cppGetInputLineNumber ();
 			MIOPos filePosition = cppGetInputFilePosition ();
 			int p = cppGetcFromUngetBufferOrFile ();
@@ -1208,6 +1210,8 @@ static int directiveDefine (const int c, bool undef)
 				if (e)
 				{
 					updateTagLine (e, lineNumber, filePosition);
+					setTagColumn (e, nameColumn);
+					setTagEndColumn (e, nameEndColumn);
 					patchScopeFieldOfParameters (param_start, param_end, r);
 				}
 			}
@@ -1215,6 +1219,13 @@ static int directiveDefine (const int c, bool undef)
 			{
 				cppUngetc (p);
 				r = makeDefineTag (vStringValue (Cpp.directive.name), NULL, undef);
+				tagEntryInfo *e = getEntryInCorkQueue (r);
+				if (e)
+				{
+					updateTagLine (e, lineNumber, filePosition);
+					setTagColumn (e, nameColumn);
+					setTagEndColumn (e, nameEndColumn);
+				}
 			}
 		}
 	}
@@ -2052,6 +2063,7 @@ process:
 				{
 					condition = conditionMayFlush(condition, false);
 
+					unsigned long savedColumn = getInputDisplayColumnNumber();
 					int next = cppGetcFromUngetBufferOrFile ();
 					if (next == DOUBLE_QUOTE)
 					{
@@ -2063,7 +2075,10 @@ process:
 					}
 					else
 					{
+						bool noBuffer = (Cpp.ungetBuffer == NULL);
 						cppUngetc (next);
+						if (noBuffer && Cpp.ungetBuffer)
+							Cpp.ungetBuffer->columnNumber = savedColumn;
 						if (macrodef)
 							vStringPut (macrodef, '@');
 					}
@@ -2097,10 +2112,14 @@ process:
 					    (! cppIsident (prev2) && (prev == 'L' || prev == 'u' || prev == 'U')) ||
 					    (! cppIsident (prev3) && (prev2 == 'u' && prev == '8')))
 					{
+						unsigned long savedColumn = getInputDisplayColumnNumber();
 						int next = cppGetcFromUngetBufferOrFile ();
 						if (next != DOUBLE_QUOTE)
 						{
+							bool noBuffer = (Cpp.ungetBuffer == NULL);
 							cppUngetc (next);
+							if (noBuffer && Cpp.ungetBuffer)
+								Cpp.ungetBuffer->columnNumber = savedColumn;
 							if (macrodef)
 								vStringPut (macrodef, 'R');
 						}
@@ -2126,9 +2145,15 @@ process:
 				else if(isxdigit(c))
 				{
 					/* Check for digit separator. If we find it we just skip it */
+					unsigned long savedColumn = getInputDisplayColumnNumber();
 					int next = cppGetcFromUngetBufferOrFile();
 					if(next != SINGLE_QUOTE)
+					{
+						bool noBuffer = (Cpp.ungetBuffer == NULL);
 						cppUngetc(next);
+						if (noBuffer && Cpp.ungetBuffer)
+							Cpp.ungetBuffer->columnNumber = savedColumn;
+					}
 					if (macrodef)
 						vStringPut (macrodef, c);
 					conditionMayPut(condition, c);
