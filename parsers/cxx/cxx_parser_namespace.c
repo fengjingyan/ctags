@@ -345,9 +345,15 @@ bool cxxParserParseNamespace(void)
 		if(iScopeCount < MAX_NESTED_NAMESPACES)
     {
 			if(aCorkQueueIndices[iScopeCount].leafnm > CORK_NIL)
+			{
 				cxxParserMarkEndLineForTagInCorkQueue(aCorkQueueIndices[iScopeCount].leafnm);
+				cxxParserMarkEndColumnForTagInCorkQueue(aCorkQueueIndices[iScopeCount].leafnm);
+			}
 			if(aCorkQueueIndices[iScopeCount].fqnm > CORK_NIL)
+			{
 				cxxParserMarkEndLineForTagInCorkQueue(aCorkQueueIndices[iScopeCount].fqnm);
+				cxxParserMarkEndColumnForTagInCorkQueue(aCorkQueueIndices[iScopeCount].fqnm);
+			}
     }
 	}
 

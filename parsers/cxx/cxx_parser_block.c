@@ -191,6 +191,7 @@ bool cxxParserParseBlockHandleOpeningBracket(void)
 	}
 
 	unsigned long uEndPosition = cppGetInputLineNumber();
+	unsigned long uEndColumn = g_cxx.pToken->iEndColumnNumber;
 
 	// If the function contained a "try" keyword before the opening bracket
 	// then it's likely to be a function-try-block and should be followed by a catch
@@ -248,14 +249,19 @@ bool cxxParserParseBlockHandleOpeningBracket(void)
 				return false;
 
 			uEndPosition = cppGetInputLineNumber();
+			uEndColumn = g_cxx.pToken->iEndColumnNumber;
  		}
  	}
 
 	if(iCorkQueueIndex > CORK_NIL)
 	{
 		cxxParserSetEndLineForTagInCorkQueue(iCorkQueueIndex,uEndPosition);
+		cxxParserSetEndColumnForTagInCorkQueue(iCorkQueueIndex,uEndColumn);
 		if(iCorkQueueIndexFQ > CORK_NIL)
+		{
 			cxxParserSetEndLineForTagInCorkQueue(iCorkQueueIndexFQ,uEndPosition);
+			cxxParserSetEndColumnForTagInCorkQueue(iCorkQueueIndexFQ,uEndColumn);
+		}
 	}
 	while(iScopes > 0)
 	{

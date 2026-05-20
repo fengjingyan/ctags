@@ -466,6 +466,24 @@ void cxxParserMarkEndLineForTagInCorkQueue(int iCorkQueueIndex)
 	cxxParserSetEndLineForTagInCorkQueue(iCorkQueueIndex, cppGetInputLineNumber());
 }
 
+void cxxParserSetEndColumnForTagInCorkQueue(int iCorkQueueIndex,unsigned long lEndColumn)
+{
+	CXX_DEBUG_ASSERT(iCorkQueueIndex > CORK_NIL,"The cork queue index is not valid");
+	setTagEndColumnToCorkEntry (iCorkQueueIndex, lEndColumn);
+}
+
+//
+// Use the current token's end column (one past its last character) as the
+// "endColumn" field of the specified tag in the cork queue. Callers should
+// invoke this when g_cxx.pToken is the closing punctuator (e.g. the '}' of
+// a struct/enum/class body or function body).
+//
+void cxxParserMarkEndColumnForTagInCorkQueue(int iCorkQueueIndex)
+{
+	cxxParserSetEndColumnForTagInCorkQueue(iCorkQueueIndex,
+										   g_cxx.pToken->iEndColumnNumber);
+}
+
 
 // Make sure that the token chain contains only the specified keyword and eventually
 // the "const" or "volatile" type modifiers.
@@ -1021,8 +1039,12 @@ bool cxxParserParseEnum(void)
 	if(iCorkQueueIndex > CORK_NIL)
 	{
 		cxxParserMarkEndLineForTagInCorkQueue(iCorkQueueIndex);
+		cxxParserMarkEndColumnForTagInCorkQueue(iCorkQueueIndex);
 		if(iCorkQueueIndexFQ > CORK_NIL)
+		{
 			cxxParserMarkEndLineForTagInCorkQueue(iCorkQueueIndexFQ);
+			cxxParserMarkEndColumnForTagInCorkQueue(iCorkQueueIndexFQ);
+		}
 	}
 
 	while(iPushedScopes > 0)
@@ -1488,8 +1510,12 @@ static bool cxxParserParseClassStructOrUnionInternal(
 	if(iCorkQueueIndex > CORK_NIL)
 	{
 		cxxParserMarkEndLineForTagInCorkQueue(iCorkQueueIndex);
+		cxxParserMarkEndColumnForTagInCorkQueue(iCorkQueueIndex);
 		if(iCorkQueueIndexFQ > CORK_NIL)
+		{
 			cxxParserMarkEndLineForTagInCorkQueue(iCorkQueueIndexFQ);
+			cxxParserMarkEndColumnForTagInCorkQueue(iCorkQueueIndexFQ);
+		}
 	}
 
 	iPushedScopes++;

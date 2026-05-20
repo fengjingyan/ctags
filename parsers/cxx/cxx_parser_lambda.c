@@ -301,8 +301,12 @@ bool cxxParserHandleLambda(CXXToken * pParenthesis)
 	if(iCorkQueueIndex > CORK_NIL)
 	{
 		cxxParserMarkEndLineForTagInCorkQueue(iCorkQueueIndex);
+		cxxParserMarkEndColumnForTagInCorkQueue(iCorkQueueIndex);
 		if(iCorkQueueIndexFQ > CORK_NIL)
+		{
 			cxxParserMarkEndLineForTagInCorkQueue(iCorkQueueIndexFQ);
+			cxxParserMarkEndColumnForTagInCorkQueue(iCorkQueueIndexFQ);
+		}
 	}
 
 	cxxScopePop();

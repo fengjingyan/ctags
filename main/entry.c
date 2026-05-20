@@ -1705,6 +1705,13 @@ extern void setTagEndLineToCorkEntry (int corkIndex, unsigned long endLine)
 		setTagEndLine (entry, endLine);
 }
 
+extern void setTagEndColumnToCorkEntry (int corkIndex, unsigned long endColumn)
+{
+	tagEntryInfo *entry = getEntryInCorkQueue (corkIndex);
+	if (entry)
+		setTagEndColumn (entry, endColumn);
+}
+
 extern void setupWriter (void *writerClientData)
 {
 	writerSetup (TagFile.mio, writerClientData);

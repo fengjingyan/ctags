@@ -675,10 +675,17 @@ static int ungetBufferGetcFromUngetBuffer (ungetBuffer *ungetBuffer)
 extern void cppUngetc (const int c)
 {
 	if (Cpp.ungetBuffer == NULL)
+	{
+		/* Fresh buffer: the char being ungot was just peeked from the file,
+		 * so the file position is one past it. Roll back so the next call to
+		 * cppGetInputColumnNumber() reports the column of that char, not the
+		 * column of what follows it. */
+		unsigned long col = getInputDisplayColumnNumber ();
 		Cpp.ungetBuffer = ungetBufferNew (getInputLineNumber(),
-										  getInputDisplayColumnNumber (),
+										  col > 0 ? col - 1 : 0,
 										  getInputFilePosition(),
 										  NULL);
+	}
 	ungetBufferUngetc (Cpp.ungetBuffer , c, Cpp.charOrStringContents);
 }
 
@@ -2063,7 +2070,6 @@ process:
 				{
 					condition = conditionMayFlush(condition, false);
 
-					unsigned long savedColumn = getInputDisplayColumnNumber();
 					int next = cppGetcFromUngetBufferOrFile ();
 					if (next == DOUBLE_QUOTE)
 					{
@@ -2075,10 +2081,7 @@ process:
 					}
 					else
 					{
-						bool noBuffer = (Cpp.ungetBuffer == NULL);
 						cppUngetc (next);
-						if (noBuffer && Cpp.ungetBuffer)
-							Cpp.ungetBuffer->columnNumber = savedColumn;
 						if (macrodef)
 							vStringPut (macrodef, '@');
 					}
@@ -2112,14 +2115,10 @@ process:
 					    (! cppIsident (prev2) && (prev == 'L' || prev == 'u' || prev == 'U')) ||
 					    (! cppIsident (prev3) && (prev2 == 'u' && prev == '8')))
 					{
-						unsigned long savedColumn = getInputDisplayColumnNumber();
 						int next = cppGetcFromUngetBufferOrFile ();
 						if (next != DOUBLE_QUOTE)
 						{
-							bool noBuffer = (Cpp.ungetBuffer == NULL);
 							cppUngetc (next);
-							if (noBuffer && Cpp.ungetBuffer)
-								Cpp.ungetBuffer->columnNumber = savedColumn;
 							if (macrodef)
 								vStringPut (macrodef, 'R');
 						}
@@ -2145,15 +2144,9 @@ process:
 				else if(isxdigit(c))
 				{
 					/* Check for digit separator. If we find it we just skip it */
-					unsigned long savedColumn = getInputDisplayColumnNumber();
 					int next = cppGetcFromUngetBufferOrFile();
 					if(next != SINGLE_QUOTE)
-					{
-						bool noBuffer = (Cpp.ungetBuffer == NULL);
 						cppUngetc(next);
-						if (noBuffer && Cpp.ungetBuffer)
-							Cpp.ungetBuffer->columnNumber = savedColumn;
-					}
 					if (macrodef)
 						vStringPut (macrodef, c);
 					conditionMayPut(condition, c);

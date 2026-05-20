@@ -257,6 +257,8 @@ bool cxxParserParseAndCondenseSubchainsUpToOneOf(
 	);
 void cxxParserMarkEndLineForTagInCorkQueue(int iCorkQueueIndex);
 void cxxParserSetEndLineForTagInCorkQueue(int iCorkQueueIndex,unsigned long lEndLine);
+void cxxParserMarkEndColumnForTagInCorkQueue(int iCorkQueueIndex);
+void cxxParserSetEndColumnForTagInCorkQueue(int iCorkQueueIndex,unsigned long lEndColumn);
 
 typedef enum _CXXParserKeywordState
 {

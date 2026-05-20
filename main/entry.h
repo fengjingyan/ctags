@@ -266,6 +266,7 @@ int           anyKindsEntryInScopeRecursive (int corkIndex,
 extern void    updateTagLine(tagEntryInfo *tag, unsigned long lineNumber, MIOPos filePosition);
 extern void    setTagEndLine (tagEntryInfo *tag, unsigned long endLine);
 extern void    setTagEndLineToCorkEntry (int corkIndex, unsigned long endLine);
+extern void    setTagEndColumnToCorkEntry (int corkIndex, unsigned long endColumn);
 #define getTagColumn(tag) ((tag)->columnNumber)
 #define setTagColumn(tag, column) ((tag)->columnNumber = (column))
 #define getTagEndLine(tag) ((tag)->extensionFields._endLine)

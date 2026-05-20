@@ -196,7 +196,10 @@ CXXToken * cxxTokenCreateAnonymousIdentifier(unsigned int uTagKind, const char *
 	t->bFollowedBySpace = true;
 	t->iLineNumber = cppGetInputLineNumber();
 	t->iColumnNumber = cppGetInputColumnNumber();
-	t->iEndColumnNumber = t->iColumnNumber + vStringLength (t->pszWord);
+	/* The synthetic name (e.g. "__anon...") has no presence in the source,
+	 * so collapse the range to zero-width at the start column. This is what
+	 * is reported as the LSP `selectionRange` for anonymous symbols. */
+	t->iEndColumnNumber = t->iColumnNumber;
 	t->oFilePosition = cppGetInputFilePosition();
 
 	return t;
