@@ -341,7 +341,7 @@ extern int getInputColumnNumber (void)
 	return ret >= 0 ? ret : 0;
 }
 
-#define DISPLAY_TAB_WIDTH 8
+#define BYTE_OFFSET_TAB_WIDTH 1
 
 extern unsigned long getInputDisplayColumnNumberForByteColumn (int byteColumn)
 {
@@ -361,7 +361,7 @@ extern unsigned long getInputDisplayColumnNumberForByteColumn (int byteColumn)
 
 		if (c == '\t')
 		{
-			column += DISPLAY_TAB_WIDTH - (column % DISPLAY_TAB_WIDTH);
+			column += BYTE_OFFSET_TAB_WIDTH - (column % BYTE_OFFSET_TAB_WIDTH);
 			p++;
 		}
 		else if ((c & 0x80) == 0)
