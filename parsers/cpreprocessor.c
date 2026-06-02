@@ -158,6 +158,7 @@ typedef struct sCppState {
 		vString * name;          /* macro name */
 		unsigned int nestLevel;  /* level 0 is not used */
 		conditionalInfo ifdef [MaxCppNestingLevel];
+		unsigned long hashColumn; /* column of '#' that started the directive */
 	} directive;
 
 	cppMacroInfo * macroInUse;
@@ -1202,8 +1203,10 @@ static int directiveDefine (const int c, bool undef)
 				vStringDelete (param);
 
 				int param_end = (int)countEntryInCorkQueue();
+				unsigned long signatureEndColumn = nameEndColumn;
 				if (p == ')')
 				{
+					signatureEndColumn = cppGetInputColumnNumber () + 1;
 					vString *signature = vStringNew ();
 					makeSignatureStringFromParameters (signature, params);
 					r = makeDefineTag (vStringValue (Cpp.directive.name), vStringValue (signature), undef);
@@ -1217,8 +1220,12 @@ static int directiveDefine (const int c, bool undef)
 				if (e)
 				{
 					updateTagLine (e, lineNumber, filePosition);
-					setTagColumn (e, nameColumn);
-					setTagEndColumn (e, nameEndColumn);
+					setTagColumn (e, Cpp.directive.hashColumn);
+					setTagEndColumn (e, signatureEndColumn);
+					setTagSelectionStartLine (e, lineNumber);
+					setTagSelectionStartColumn (e, nameColumn);
+					setTagSelectionEndLine (e, lineNumber);
+					setTagSelectionEndColumn (e, nameEndColumn);
 					patchScopeFieldOfParameters (param_start, param_end, r);
 				}
 			}
@@ -1230,8 +1237,12 @@ static int directiveDefine (const int c, bool undef)
 				if (e)
 				{
 					updateTagLine (e, lineNumber, filePosition);
-					setTagColumn (e, nameColumn);
+					setTagColumn (e, Cpp.directive.hashColumn);
 					setTagEndColumn (e, nameEndColumn);
+					setTagSelectionStartLine (e, lineNumber);
+					setTagSelectionStartColumn (e, nameColumn);
+					setTagSelectionEndLine (e, lineNumber);
+					setTagSelectionEndColumn (e, nameEndColumn);
 				}
 			}
 		}
@@ -1710,12 +1721,14 @@ static int skipToEndOfChar (void)
 	return CHAR_SYMBOL;  /* symbolic representation of character */
 }
 
-static void attachFields (int macroCorkIndex, unsigned long endLine, const char *macrodef)
+static void attachFields (int macroCorkIndex, unsigned long endLine, unsigned long endColumn, const char *macrodef)
 {
 	tagEntryInfo *tag = getEntryInCorkQueue (macroCorkIndex);
 	if (tag)
 	{
 		setTagEndLine (tag, endLine);
+		if (endColumn > 0)
+			setTagEndColumn (tag, endColumn);
 		if (macrodef)
 			attachParserField (tag, Cpp.macrodefFieldIndex, macrodef);
 	}
@@ -1802,6 +1815,7 @@ extern int cppGetc (void)
 	bool ignore = false;
 	int c;
 	int macroCorkIndex = CORK_NIL;
+	unsigned long macroEndColumn = 0;
 	vString *macrodef = NULL;
 	vString *condition = NULL;
 
@@ -1819,6 +1833,7 @@ process:
 				{
 					attachFields (macroCorkIndex,
 								  cppGetInputLineNumber(),
+								  macroEndColumn,
 								  macrodef? vStringValue (macrodef): NULL);
 					macroCorkIndex = CORK_NIL;
 				}
@@ -1843,6 +1858,7 @@ process:
 					{
 						attachFields (macroCorkIndex,
 									  cppGetInputLineNumber(),
+									  macroEndColumn,
 									  macrodef? vStringValue (macrodef): NULL);
 						macroCorkIndex = CORK_NIL;
 					}
@@ -1879,8 +1895,9 @@ process:
 				if (Cpp.directive.accept)
 				{
 					directive = true;
-					Cpp.directive.state  = DRCTV_HASH;
-					Cpp.directive.accept = false;
+					Cpp.directive.state     = DRCTV_HASH;
+					Cpp.directive.accept    = false;
+					Cpp.directive.hashColumn = cppGetInputColumnNumber ();
 				}
 				if (macrodef)
 					vStringPut (macrodef, '#');
@@ -2180,6 +2197,8 @@ process:
 				}
 				break;
 		}
+		if (macroCorkIndex != CORK_NIL && c != NEWLINE && c != EOF)
+			macroEndColumn = cppGetInputColumnNumber () + 1;
 	} while (directive || ignore);
 
 	if (macrodef)
